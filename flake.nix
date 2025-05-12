@@ -30,6 +30,9 @@
           jq = pkgs.jq;
           gomod2nix = pkgs.gomod2nix;
           watchexec = pkgs.watchexec;
+          python3 = pkgs.python3;
+          uv = pkgs.uv;
+          just = pkgs.just;
 
           kubectl = pkgs.kubectl;
           gnugrep = pkgs.gnugrep;
