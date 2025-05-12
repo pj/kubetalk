@@ -25,17 +25,13 @@
           go = pkgs.go;
           gopls = pkgs.gopls;
           go-tools = pkgs.go-tools;
-          devspace = pkgs.devspace;
           postgresql_13 = pkgs.postgresql_13;
           nodejs_22 = pkgs.nodejs_22;
           jq = pkgs.jq;
           gomod2nix = pkgs.gomod2nix;
           watchexec = pkgs.watchexec;
 
-          google-cloud-sdk = pkgs.google-cloud-sdk.withExtraComponents
-            ([ pkgs.google-cloud-sdk.components.gke-gcloud-auth-plugin ]);
           kubectl = pkgs.kubectl;
-          lima = pkgs.lima;
           gnugrep = pkgs.gnugrep;
           openssh = pkgs.openssh;
           kubernetes-helm = pkgs.wrapHelm pkgs.kubernetes-helm {
@@ -45,17 +41,14 @@
             ];
           };
           terraform = pkgs.terraform;
-          coreutils = pkgs.coreutils;
-          bash = pkgs.bash;
           helmfile = pkgs.helmfile;
           git = pkgs.git;
-          gawk = pkgs.gawk;
           
-          default = wrapped-installer;
+          default = pkgs.go;
         };
 
       in {
-        packages = deps // { installerDockerImage = installerDockerImage; };
+        packages = deps;
         devShell =
           pkgs.mkShell { packages = pkgs.lib.attrsets.attrValues deps; };
       });
