@@ -28,17 +28,24 @@ backend-lint:
 backend-test:
     pytest
 
+# Registry management tasks
+registry-login:
+    aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $(cd infra/registry && terraform output -raw repository_url)
+
 # Initialize Terraform
+[working-directory: "infra"]
 infra-init:
-    cd infra/static && terraform init
+    terraform init
 
 # Plan Terraform changes
+[working-directory: "infra"]
 infra-plan:
-    cd infra/static && terraform plan
+    terraform plan
 
 # Apply Terraform changes
+[working-directory: "infra"]
 infra-apply:
-    cd infra/static && terraform apply
+    terraform apply
 
 # Deploy frontend to S3/CloudFront
 deploy: frontend-build

@@ -33,6 +33,8 @@
           python3 = pkgs.python3;
           uv = pkgs.uv;
           just = pkgs.just;
+          operator-sdk = pkgs.operator-sdk;
+          awscli2 = pkgs.awscli2;
 
           kubectl = pkgs.kubectl;
           gnugrep = pkgs.gnugrep;
