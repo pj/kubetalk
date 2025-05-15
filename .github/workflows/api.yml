@@ -45,8 +45,10 @@ jobs:
             keep-outputs = true
 
       - uses: nicknovitski/nix-develop@v1
+
       - name: Build and push image to Amazon ECR
         run: |
+          env
           # Make profiles work
           aws configure set aws_access_key_id ${{ env.AWS_ACCESS_KEY_ID }} --profile kubetalk
           aws configure set aws_secret_access_key ${{ env.AWS_SECRET_ACCESS_KEY }} --profile kubetalk
