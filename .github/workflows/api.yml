@@ -6,11 +6,13 @@ on:
     paths:
       - 'backend/**'
       - 'infra/terraform/**'
+      - '.github/workflows/api.yml'
   pull_request:
     branches: [ main ]
     paths:
       - 'backend/**'
       - 'infra/terraform/**'
+      - '.github/workflows/api.yml'
   workflow_dispatch:
 
 env:
