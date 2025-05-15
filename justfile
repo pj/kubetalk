@@ -147,6 +147,7 @@ ci-backend-docker region:
 
 ci-flake-docker region:
     just infra-globals kubetalk {{region}}
+    cat infra/variables/backend.tfbackend
     ls -la infra/variables
     just flake-docker
 
