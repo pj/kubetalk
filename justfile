@@ -79,6 +79,21 @@ registry-login:
         aws ecr get-login-password --region $REGION --profile $AWS_PROFILE | docker login --username AWS --password-stdin $REPO_URL
     fi
 
+flake-docker: docker-check version registry-login
+    #!/usr/bin/env bash
+    # Get repository URL from terraform output
+    REPO_URL=$(cd ../infra/terraform/main && terraform output -raw api_repository_url)
+    # Get version tags from version_info.json
+    LATEST_TAG=$(jq -r '.version.tags.location_latest' ../infra/variables/version_info.json)
+    BRANCH_TAG=$(jq -r '.version.tags.branch_latest' ../infra/variables/version_info.json)
+    COMMIT_TAG=$(jq -r '.version.tags.commit' ../infra/variables/version_info.json)
+    # Build and tag the image
+    docker build -t $REPO_URL:$LATEST_TAG -t $REPO_URL:$BRANCH_TAG -t $REPO_URL:$COMMIT_TAG ./Dockerfile.flake
+    # Push all tags
+    docker push $REPO_URL:$LATEST_TAG
+    docker push $REPO_URL:$BRANCH_TAG
+    docker push $REPO_URL:$COMMIT_TAG
+
 infra-globals region:
     ./infra/scripts/terraform_globals.sh {{region}}
 
@@ -129,6 +144,10 @@ clean:
 ci-backend-docker region:
     just infra-globals {{region}}
     just backend-docker
+
+ci-flake-docker region:
+    just infra-globals {{region}}
+    just flake-docker
 
 # Show this help message
 help:
