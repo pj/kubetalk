@@ -32,19 +32,22 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
-          profile-name: ${{ env.AWS_PROFILE }}
+          role-session-name: ${{ github.run_id}}
 
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-        env:
-          AWS_PROFILE: ${{ env.AWS_PROFILE }}
 
       - uses: nixbuild/nix-quick-install-action@v30
         with:
           nix_conf: |
             keep-env-derivations = true
             keep-outputs = true
+
+      - name: Print AWS credentials
+        run: |
+          aws sts get-caller-identity
+          cat ~/.aws/config
       
       - name: Build and push image to Amazon ECR
         run: |
