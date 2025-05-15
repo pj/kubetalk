@@ -126,6 +126,10 @@ clean:
     find . -type d -name __pycache__ -exec rm -r {} +
     find . -type f -name '*.pyc' -delete
 
+ci-backend-docker region:
+    just infra-globals {{region}}
+    just backend-docker
+
 # Show this help message
 help:
     @just --list --unsorted 
