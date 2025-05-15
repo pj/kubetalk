@@ -79,6 +79,9 @@ registry-login:
         aws ecr get-login-password --region $REGION --profile $AWS_PROFILE | docker login --username AWS --password-stdin $REPO_URL
     fi
 
+infra-globals:
+    ./infra/scripts/terraform_globals.sh
+
 infra-manual-steps:
     echo "Manual steps before running just infra-bootstrap:"
     echo "- Enable AWS Identity Center"
@@ -105,8 +108,7 @@ infra:
     terraform init -backend-config=../../variables/backend.tfbackend
     terraform apply \
         -var-file=../../variables/global.tfvars \
-        -var-file=../../variables/dns.tfvars \
-        -var-file=../../variables/github.tfvars
+        -var-file=../../variables/config.tfvars
 
 # Deploy frontend to S3/CloudFront
 deploy: frontend-build
