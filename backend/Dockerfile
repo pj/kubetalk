@@ -11,6 +11,8 @@ RUN pip install uv
 # Copy requirements first for better caching
 COPY pyproject.toml .
 
+RUN uv venv
+
 # Install dependencies using uv
 RUN uv pip install .
 

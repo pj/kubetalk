@@ -56,6 +56,14 @@ module "registry" {
   source = "../registry"
 }
 
+output "api_repository_url" {
+  value = module.registry.api_repository.url
+}
+
+output "operator_repository_url" {
+  value = module.registry.operator_repository.url
+}
+
 # TODO: This is created manually and imported
 # module "dns" {
 #   source = "../dns"

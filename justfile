@@ -28,6 +28,32 @@ backend-lint:
 backend-test:
     pytest
 
+# Check if Docker is running
+docker-check:
+    #!/usr/bin/env bash
+    if ! docker info > /dev/null 2>&1; then
+        echo "Error: Docker is not running" >&2
+        exit 1
+    fi
+    echo "Docker is running"
+
+# Build and push backend Docker image
+[working-directory: "backend"]
+backend-docker: docker-check version registry-login
+    #!/usr/bin/env bash
+    # Get repository URL from terraform output
+    REPO_URL=$(cd ../infra/terraform/main && terraform output -raw api_repository_url)
+    # Get version tags from version_info.json
+    LATEST_TAG=$(jq -r '.version.tags.location_latest' ../infra/variables/version_info.json)
+    BRANCH_TAG=$(jq -r '.version.tags.branch_latest' ../infra/variables/version_info.json)
+    COMMIT_TAG=$(jq -r '.version.tags.commit' ../infra/variables/version_info.json)
+    # Build and tag the image
+    docker build -t $REPO_URL:$LATEST_TAG -t $REPO_URL:$BRANCH_TAG -t $REPO_URL:$COMMIT_TAG .
+    # Push all tags
+    docker push $REPO_URL:$LATEST_TAG
+    docker push $REPO_URL:$BRANCH_TAG
+    docker push $REPO_URL:$COMMIT_TAG
+
 # AWS configuration and login
 # Making me manually configure this stuff, seriously?
 aws-configure:
@@ -39,7 +65,19 @@ aws-login:
     @echo "AWS SSO login successful. You can now use AWS CLI with the kubetalk profile."
 
 registry-login:
-    aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $(cd infra/registry && terraform output -raw repository_url)
+    #!/usr/bin/env bash
+    # Get region from config
+    REGION=$(jq -r '.region' infra/variables/config.json)
+    AWS_PROFILE=$(jq -r '.aws_profile' infra/variables/config.json)
+    REPO_URL=$(cd infra/terraform/main && terraform output -raw api_repository_url)
+    echo $REPO_URL
+    # Check if already logged in
+    if aws ecr get-login-password --region $REGION --profile $AWS_PROFILE | docker login --username AWS --password-stdin $REPO_URL 2>/dev/null; then
+        echo "Already logged in to ECR"
+    else
+        echo "Logging in to ECR..."
+        aws ecr get-login-password --region $REGION --profile $AWS_PROFILE | docker login --username AWS --password-stdin $REPO_URL
+    fi
 
 infra-manual-steps:
     echo "Manual steps before running just infra-bootstrap:"
@@ -51,8 +89,12 @@ infra-manual-steps:
     echo "- Assign the permission set to the user"
 
 # Create some basic things for running terraform in the infra
-infra-bootstrap profile region:
-    ./infra/scripts/bootstrap.sh {{profile}} {{region}}
+infra-bootstrap:
+    #!/usr/bin/env bash
+    # Get config values
+    REGION=$(jq -r '.region' infra/variables/config.json)
+    AWS_PROFILE=$(jq -r '.aws_profile' infra/variables/config.json)
+    ./infra/scripts/bootstrap.sh $AWS_PROFILE $REGION
 
 # Generate version information
 version:
