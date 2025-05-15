@@ -52,7 +52,7 @@ EOF
 
 echo "Creating config.json..."
 # TODO: Refactor variables to use json for everything
-cat > infra/variables/config.json << EOF
+cat > infra/variables/config.json << 'EOF'
 {
     "region": "$AWS_REGION",
     "aws_profile": "$AWS_PROFILE"
