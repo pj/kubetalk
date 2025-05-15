@@ -14,6 +14,7 @@ fi
 # Check for existing state bucket
 BUCKET_PREFIX="kubetalk-terraform-state-"
 EXISTING_BUCKET=$(aws s3api list-buckets --profile "${AWS_PROFILE}" --query "Buckets[?starts_with(Name, '${BUCKET_PREFIX}')].Name" --output text)
+echo "EXISTING_BUCKET: $EXISTING_BUCKET"
 
 if [ -n "$EXISTING_BUCKET" ]; then
     echo "Found existing state bucket: $EXISTING_BUCKET"
@@ -63,10 +64,10 @@ aws_region   = "$AWS_REGION"
 aws_profile  = "$AWS_PROFILE"
 EOF
 
-# Create a backend.tf file for the registry module
+# Create a backend.tf file for the terraform state
 cat > infra/variables/backend.tfbackend << EOF
 bucket = "$BUCKET_NAME"
-key    = "registry.tfstate"
+key    = "terraform.tfstate"
 region = "$AWS_REGION"
 profile = "$AWS_PROFILE"
 use_lockfile = true

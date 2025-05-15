@@ -52,14 +52,18 @@ infra-manual-steps:
 
 # Create some basic things for running terraform in the infra
 infra-bootstrap profile region:
-    ./infra/bootstrap.sh {{profile}} {{region}}
+    ./infra/scripts/bootstrap.sh {{profile}} {{region}}
 
-[working-directory: "infra/main"]
+# Generate version information
+version:
+    ./infra/scripts/generate_version_info.sh $(test -f infra/variables/location.json && jq -r '.location' infra/variables/location.json || echo "")
+
+[working-directory: "infra/terraform/main"]
 infra:
-    terraform init --backend-config=infra/variables/backend.tfbackend
+    terraform init -backend-config=../../variables/backend.tfbackend
     terraform apply \
-        -var-file=../variables/global.tfvars \
-        -var-file=../variables/dns.tfvars
+        -var-file=../../variables/global.tfvars \
+        -var-file=../../variables/dns.tfvars
 
 # Deploy frontend to S3/CloudFront
 deploy: frontend-build

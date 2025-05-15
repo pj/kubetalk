@@ -5,6 +5,13 @@ terraform {
       version = "~> 5.0"
     }
   }
+  backend "s3" {
+    bucket = ""
+    key    = ""
+    region = ""
+    profile = ""
+    use_lockfile = true
+  }
 }
 
 variable "aws_profile" {
@@ -50,7 +57,7 @@ module "registry" {
 }
 
 # TODO: This is created manually and imported
-module "dns" {
-  source = "../dns"
-  dns    = var.dns
-}
+# module "dns" {
+#   source = "../dns"
+#   dns    = var.dns
+# }
