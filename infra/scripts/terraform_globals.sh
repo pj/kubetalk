@@ -50,6 +50,7 @@ profile = "$AWS_PROFILE"
 use_lockfile = true
 EOF 
 
+echo "Creating config.json..."
 # TODO: Refactor variables to use json for everything
 cat > infra/variables/config.json << EOF
 {
@@ -57,3 +58,4 @@ cat > infra/variables/config.json << EOF
     "aws_profile": "$AWS_PROFILE"
 }
 EOF
+echo "config.json created"
