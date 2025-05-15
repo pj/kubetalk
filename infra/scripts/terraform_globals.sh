@@ -26,6 +26,8 @@ if [ -z "$EXISTING_BUCKET" ]; then
     exit 1
 fi
 
+BUCKET_NAME=$EXISTING_BUCKET
+
 # Output the configuration
 echo "Organization setup complete!"
 echo "Terraform state bucket: $BUCKET_NAME"
