@@ -47,7 +47,7 @@ jobs:
       - name: Print AWS credentials
         run: |
           aws sts get-caller-identity
-          cat ~/.aws/config
+          env
       
       - name: Build and push image to Amazon ECR
         run: |
