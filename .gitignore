@@ -46,3 +46,7 @@ infra/deploys/**/.terraform
 infra/deploys/**/outputs/*
 infra/deploys/**/version_info.json
 infra/config/local.json
+infra/variables
+
+infra/**/*.tfstate
+infra/**/*.tfstate.backup

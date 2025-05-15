@@ -35,6 +35,7 @@
           just = pkgs.just;
           operator-sdk = pkgs.operator-sdk;
           awscli2 = pkgs.awscli2;
+          util-linux = pkgs.util-linux;  # Provides uuidgen
 
           kubectl = pkgs.kubectl;
           gnugrep = pkgs.gnugrep;

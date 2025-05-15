@@ -28,24 +28,38 @@ backend-lint:
 backend-test:
     pytest
 
-# Registry management tasks
+# AWS configuration and login
+# Making me manually configure this stuff, seriously?
+aws-configure:
+    aws configure sso
+    aws configure set profile.kubetalk.sso-session "kubetalk-session" --profile kubetalk
+
+aws-login:
+    aws sso login --profile kubetalk
+    @echo "AWS SSO login successful. You can now use AWS CLI with the kubetalk profile."
+
 registry-login:
     aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $(cd infra/registry && terraform output -raw repository_url)
 
-# Initialize Terraform
-[working-directory: "infra"]
-infra-init:
-    terraform init
+infra-manual-steps:
+    echo "Manual steps before running just infra-bootstrap:"
+    echo "- Enable AWS Identity Center"
+    echo "- Create 'Global' OU in AWS Organizations"
+    echo "- Create an AWS account in the Global OU"
+    echo "- Create a user in Identity Center"
+    echo "- Create a permission set in Identity Center"
+    echo "- Assign the permission set to the user"
 
-# Plan Terraform changes
-[working-directory: "infra"]
-infra-plan:
-    terraform plan
+# Create some basic things for running terraform in the infra
+infra-bootstrap profile region:
+    ./infra/bootstrap.sh {{profile}} {{region}}
 
-# Apply Terraform changes
-[working-directory: "infra"]
-infra-apply:
-    terraform apply
+[working-directory: "infra/main"]
+infra:
+    terraform init --backend-config=infra/variables/backend.tfbackend
+    terraform apply \
+        -var-file=../variables/global.tfvars \
+        -var-file=../variables/dns.tfvars
 
 # Deploy frontend to S3/CloudFront
 deploy: frontend-build

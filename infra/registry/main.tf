@@ -7,10 +7,6 @@ terraform {
   }
 }
 
-provider "aws" {
-  region = "us-east-1"
-}
-
 # ECR Repository for the operator
 resource "aws_ecr_repository" "operator" {
   name                 = "kubetalk-operator"
@@ -21,12 +17,25 @@ resource "aws_ecr_repository" "operator" {
   }
 }
 
-# Output the repository URL
-output "repository_url" {
-  value = aws_ecr_repository.operator.repository_url
+resource "aws_ecr_repository" "api" {
+  name                 = "kubetalk-api"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
 }
 
-# Output the repository ARN
-output "repository_arn" {
-  value = aws_ecr_repository.operator.arn
-} 
+output "operator_repository" {
+  value = {
+    url = aws_ecr_repository.operator.repository_url
+    arn = aws_ecr_repository.operator.arn
+  }
+}
+
+output "api_repository" {
+  value = {
+    url = aws_ecr_repository.api.repository_url
+    arn = aws_ecr_repository.api.arn
+  }
+}
