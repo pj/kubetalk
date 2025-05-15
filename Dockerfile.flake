@@ -1,0 +1,23 @@
+FROM nixos/nix:2.19.2
+
+# Copy the flake files
+COPY flake.nix flake.lock ./
+
+# Enable flakes
+RUN mkdir -p /etc/nix && \
+    echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
+
+# Install all packages from the flake
+RUN nix profile install .
+
+# Set up environment
+ENV PATH="/root/.nix-profile/bin:${PATH}"
+
+# Verify installations
+RUN go version && \
+    node --version && \
+    python3 --version && \
+    aws --version && \
+    kubectl version --client && \
+    terraform version && \
+    helm version
