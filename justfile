@@ -142,11 +142,11 @@ clean:
     find . -type f -name '*.pyc' -delete
 
 ci-backend-docker region:
-    just infra-globals {{region}}
+    just infra-globals kubetalk {{region}}
     just backend-docker
 
 ci-flake-docker region:
-    just infra-globals {{region}}
+    just infra-globals kubetalk {{region}}
     just flake-docker
 
 # Show this help message
