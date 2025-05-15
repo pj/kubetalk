@@ -44,11 +44,7 @@ jobs:
             keep-env-derivations = true
             keep-outputs = true
 
-      - name: Print AWS credentials
-        run: |
-          aws sts get-caller-identity
-          env
-      
+      - uses: nicknovitski/nix-develop@v1
       - name: Build and push image to Amazon ECR
         run: |
           # Make profiles work
