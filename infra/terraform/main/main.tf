@@ -64,6 +64,10 @@ output "operator_repository_url" {
   value = module.registry.operator_repository.url
 }
 
+output "github_actions_role_arn" {
+  value = aws_iam_role.github_actions.arn
+}
+
 # TODO: This is created manually and imported
 # module "dns" {
 #   source = "../dns"

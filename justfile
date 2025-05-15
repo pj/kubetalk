@@ -105,7 +105,8 @@ infra:
     terraform init -backend-config=../../variables/backend.tfbackend
     terraform apply \
         -var-file=../../variables/global.tfvars \
-        -var-file=../../variables/dns.tfvars
+        -var-file=../../variables/dns.tfvars \
+        -var-file=../../variables/github.tfvars
 
 # Deploy frontend to S3/CloudFront
 deploy: frontend-build
