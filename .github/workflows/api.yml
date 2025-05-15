@@ -51,5 +51,9 @@ jobs:
       
       - name: Build and push image to Amazon ECR
         run: |
-          just infra-globals
+          # Make profiles work
+          aws configure set aws_access_key_id ${{ env.AWS_ACCESS_KEY_ID }} --profile kubetalk
+          aws configure set aws_secret_access_key ${{ env.AWS_SECRET_ACCESS_KEY }} --profile kubetalk
+          aws configure set aws_session_token ${{ env.AWS_SESSION_TOKEN }} --profile kubetalk
+          just infra-globals ${{ secrets.AWS_REGION }}
           just backend-docker

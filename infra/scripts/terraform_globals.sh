@@ -3,11 +3,16 @@ set -euxo pipefail
 
 # Default values
 AWS_PROFILE=${1:-"kubetalk"}
-AWS_REGION=${2:-"us-east-1"}
+AWS_REGION=${2}
 
 # Check if AWS CLI is installed
 if ! command -v aws &> /dev/null; then
     echo "AWS CLI is required but not installed. Please install it first."
+    exit 1
+fi
+
+if [ -z "$AWS_REGION" ]; then
+    echo "AWS_REGION is not set"
     exit 1
 fi
 

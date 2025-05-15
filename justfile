@@ -79,8 +79,8 @@ registry-login:
         aws ecr get-login-password --region $REGION --profile $AWS_PROFILE | docker login --username AWS --password-stdin $REPO_URL
     fi
 
-infra-globals:
-    ./infra/scripts/terraform_globals.sh
+infra-globals region:
+    ./infra/scripts/terraform_globals.sh {{region}}
 
 infra-manual-steps:
     echo "Manual steps before running just infra-bootstrap:"
