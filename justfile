@@ -94,8 +94,8 @@ flake-docker: docker-check version registry-login
     docker push $REPO_URL:$BRANCH_TAG
     docker push $REPO_URL:$COMMIT_TAG
 
-infra-globals region:
-    ./infra/scripts/terraform_globals.sh {{region}}
+infra-globals profile region:
+    ./infra/scripts/terraform_globals.sh {{profile}} {{region}}
 
 infra-manual-steps:
     echo "Manual steps before running just infra-bootstrap:"
