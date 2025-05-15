@@ -17,7 +17,6 @@ on:
 
 env:
   ECR_REPOSITORY: kubetalk-api
-  AWS_PROFILE: github-actions
 
 permissions:
   id-token: write
