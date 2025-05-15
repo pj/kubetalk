@@ -4,12 +4,14 @@ on:
   push:
     branches: [ main ]
     paths:
+      - '.github/workflows/flake.yml'
       - './Dockerfile.flake'
       - 'flake.nix'
       - 'flake.lock'
   pull_request:
     branches: [ main ]
     paths:
+      - '.github/workflows/flake.yml'
       - './Dockerfile.flake'
       - 'flake.nix'
       - 'flake.lock'
