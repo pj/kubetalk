@@ -44,9 +44,27 @@ jobs:
             keep-env-derivations = true
             keep-outputs = true
 
+      - name: Restore and save Nix store and npm cache
+        uses: nix-community/cache-nix-action@v6
+        with:
+          primary-key: build-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
+          # do purge caches
+          purge: true
+          # purge all versions of the cache
+          purge-prefixes: build-${{ runner.os }}-
+          # created more than 0 seconds ago relative to the start of the `Post Restore` phase
+          purge-created: 0
+          # except the version with the `primary-key`, if it exists
+          purge-primary-key: never
+          # and collect garbage in the Nix store until it reaches this size in bytes
+          gc-max-store-size: 0
+      
+      - name: Install flake dependencies
+        run: |
+          nix develop --command echo "dependencies installed"
+
       - name: Build and push image to Amazon ECR
         run: |
-          env
           # Make profiles work
           aws configure set aws_access_key_id ${{ env.AWS_ACCESS_KEY_ID }} --profile kubetalk
           aws configure set aws_secret_access_key ${{ env.AWS_SECRET_ACCESS_KEY }} --profile kubetalk
