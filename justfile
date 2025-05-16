@@ -141,11 +141,9 @@ clean:
     find . -type d -name __pycache__ -exec rm -r {} +
     find . -type f -name '*.pyc' -delete
 
-ci-backend-docker:
+ci-backend-docker profile region:
     #!/usr/bin/env bash
-    REGION=$(jq -r '.region' infra/variables/config.json)
-    AWS_PROFILE=$(jq -r '.aws_profile' infra/variables/config.json)
-    just infra-globals $AWS_PROFILE $REGION
+    just infra-globals {{profile}} {{region}}
     just backend-docker
 
 # Show this help message
