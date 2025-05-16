@@ -67,6 +67,7 @@ aws-login:
 registry-login:
     #!/usr/bin/env bash
     # Get region from config
+    pwd
     REGION=$(jq -r '.region' infra/variables/config.json)
     AWS_PROFILE=$(jq -r '.aws_profile' infra/variables/config.json)
     REPO_URL=$(cd infra/terraform/main && terraform output -raw api_repository_url)
@@ -144,6 +145,7 @@ clean:
 ci-backend-docker profile region:
     #!/usr/bin/env bash
     just infra-globals {{profile}} {{region}}
+    ls -la infra/variables
     just backend-docker
 
 # Show this help message
