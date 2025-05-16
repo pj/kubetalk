@@ -39,7 +39,7 @@ docker-check:
 
 # Build and push backend Docker image
 [working-directory: "backend"]
-backend-docker: docker-check version registry-login
+backend-docker: docker-check version registry-login infra-init
     #!/usr/bin/env bash
     # Get repository URL from terraform output
     REPO_URL=$(cd ../infra/terraform/main && terraform output -raw api_repository_url)
@@ -119,9 +119,13 @@ infra-bootstrap:
 version:
     ./infra/scripts/generate_version_info.sh $(test -f infra/variables/location.json && jq -r '.location' infra/variables/location.json || echo "")
 
+# Initialize terraform
 [working-directory: "infra/terraform/main"]
-infra:
+infra-init:
     terraform init -backend-config=../../variables/backend.tfbackend
+
+[working-directory: "infra/terraform/main"]
+infra: infra-init
     terraform apply \
         -var-file=../../variables/global.tfvars \
         -var-file=../../variables/config.tfvars
