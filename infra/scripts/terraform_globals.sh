@@ -53,7 +53,7 @@ EOF
 # TODO: Refactor variables to use json for everything
 cat << EOF > infra/variables/config.json
 {
-    "region": "$AWS_REGION",
-    "aws_profile": "$AWS_PROFILE"
+"region": "$AWS_REGION",
+"aws_profile": "$AWS_PROFILE"
 }
 EOF
