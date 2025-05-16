@@ -48,7 +48,7 @@ key    = "terraform.tfstate"
 region = "$AWS_REGION"
 profile = "$AWS_PROFILE"
 use_lockfile = true
-EOF 
+EOF
 
 # TODO: Refactor variables to use json for everything
 cat << EOF > infra/variables/config.json
