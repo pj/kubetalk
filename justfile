@@ -39,7 +39,7 @@ docker-check:
 
 # Build and push backend Docker image
 [working-directory: "backend"]
-backend-docker: docker-check version registry-login infra-init
+backend-docker: docker-check version infra-init registry-login 
     #!/usr/bin/env bash
     # Get repository URL from terraform output
     REPO_URL=$(cd ../infra/terraform/main && terraform output -raw api_repository_url)
@@ -67,11 +67,9 @@ aws-login:
 registry-login:
     #!/usr/bin/env bash
     # Get region from config
-    pwd
     REGION=$(jq -r '.region' infra/variables/config.json)
     AWS_PROFILE=$(jq -r '.aws_profile' infra/variables/config.json)
     REPO_URL=$(cd infra/terraform/main && terraform output -raw api_repository_url)
-    echo $REPO_URL
     # Check if already logged in
     if aws ecr get-login-password --region $REGION --profile $AWS_PROFILE | docker login --username AWS --password-stdin $REPO_URL 2>/dev/null; then
         echo "Already logged in to ECR"
