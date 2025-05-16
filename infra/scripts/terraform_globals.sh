@@ -35,14 +35,14 @@ echo "AWS Profile used: $AWS_PROFILE"
 
 # Create a terraform.tfvars file for the global module
 mkdir -p infra/variables
-cat > infra/variables/global.tfvars << EOF
+cat << EOF > infra/variables/global.tfvars
 state_bucket = "$BUCKET_NAME"
 aws_region   = "$AWS_REGION"
 aws_profile  = "$AWS_PROFILE"
 EOF
 
 # Create a backend.tf file for the terraform state
-cat > infra/variables/backend.tfbackend << EOF
+cat << EOF > infra/variables/backend.tfbackend
 bucket = "$BUCKET_NAME"
 key    = "terraform.tfstate"
 region = "$AWS_REGION"
@@ -51,21 +51,7 @@ use_lockfile = true
 EOF 
 
 # TODO: Refactor variables to use json for everything
-cat > infra/variables/config.json << EOF
-{
-    "region": "$AWS_REGION",
-    "aws_profile": "$AWS_PROFILE"
-}
-EOF
-
-cat > infra/variables/config.json << EOF
-{
-    "region": "$AWS_REGION",
-    "aws_profile": "$AWS_PROFILE"
-}
-EOF
-
-cat > infra/variables/config.json << EOF
+cat << EOF > infra/variables/config.json
 {
     "region": "$AWS_REGION",
     "aws_profile": "$AWS_PROFILE"

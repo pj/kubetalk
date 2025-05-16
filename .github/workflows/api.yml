@@ -38,30 +38,8 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - uses: nixbuild/nix-quick-install-action@v30
-        with:
-          nix_conf: |
-            keep-env-derivations = true
-            keep-outputs = true
-
-      - name: Restore and save Nix store and npm cache
-        uses: nix-community/cache-nix-action@v6
-        with:
-          primary-key: build-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
-          # do purge caches
-          purge: true
-          # purge all versions of the cache
-          purge-prefixes: build-${{ runner.os }}-
-          # created more than 0 seconds ago relative to the start of the `Post Restore` phase
-          purge-created: 0
-          # except the version with the `primary-key`, if it exists
-          purge-primary-key: never
-          # and collect garbage in the Nix store until it reaches this size in bytes
-          gc-max-store-size: 0
-      
-      - name: Install flake dependencies
-        run: |
-          nix develop --command echo "dependencies installed"
+      - uses: extractions/setup-just@v3
+      - uses: hashicorp/setup-terraform@v3
 
       - name: Build and push image to Amazon ECR
         run: |
@@ -69,4 +47,4 @@ jobs:
           aws configure set aws_access_key_id ${{ env.AWS_ACCESS_KEY_ID }} --profile kubetalk
           aws configure set aws_secret_access_key ${{ env.AWS_SECRET_ACCESS_KEY }} --profile kubetalk
           aws configure set aws_session_token ${{ env.AWS_SESSION_TOKEN }} --profile kubetalk
-          nix develop --command just ci-backend-docker ${{ secrets.AWS_REGION }}
+          just ci-backend-docker ${{ secrets.AWS_REGION }}

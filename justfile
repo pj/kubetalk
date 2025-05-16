@@ -141,15 +141,12 @@ clean:
     find . -type d -name __pycache__ -exec rm -r {} +
     find . -type f -name '*.pyc' -delete
 
-ci-backend-docker region:
-    just infra-globals kubetalk {{region}}
+ci-backend-docker:
+    #!/usr/bin/env bash
+    REGION=$(jq -r '.region' infra/variables/config.json)
+    AWS_PROFILE=$(jq -r '.aws_profile' infra/variables/config.json)
+    just infra-globals $AWS_PROFILE $REGION
     just backend-docker
-
-ci-flake-docker region:
-    just infra-globals kubetalk {{region}}
-    cat infra/variables/backend.tfbackend
-    ls -la infra/variables
-    just flake-docker
 
 # Show this help message
 help:
