@@ -15,9 +15,6 @@ on:
       - '.github/workflows/api.yml'
   workflow_dispatch:
 
-env:
-  ECR_REPOSITORY: kubetalk-api
-
 permissions:
   id-token: write
   contents: read
