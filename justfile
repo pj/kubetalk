@@ -46,7 +46,8 @@ operator-catalog-docker-build:
     #!/usr/bin/env bash
     REPO_URL=$(cd ../infra/terraform/main && terraform output -raw catalog_repository_url)
     API_REPO_URL=$(cd ../infra/terraform/main && terraform output -raw api_repository_url)
-    make catalog-build catalog-push CATALOG_REPO=$REPO_URL REPO_URL=$API_REPO_URL
+    BUNDLE_REPO_URL=$(cd ../infra/terraform/main && terraform output -raw bundle_repository_url)
+    make catalog-build catalog-push CATALOG_REPO=$REPO_URL REPO_URL=$API_REPO_URL BUNDLE_REPO=$BUNDLE_REPO_URL
 
 # Check if Docker is running
 docker-check:
