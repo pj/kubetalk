@@ -1,0 +1,47 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+  name: operator.v0.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: Kubetalk is the Schema for the kubetalks API
+      displayName: Kubetalk
+      kind: Kubetalk
+      name: kubetalks.kubetalk.click.kubetalk.click
+      version: v1alpha1
+  description: kubetalk operator
+  displayName: kubetalk
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - debugging
+  links:
+  - name: Operator
+    url: https://operator.domain
+  maintainers:
+  - email: paul@johnson.kiwi.nz
+    name: pj
+  maturity: alpha
+  provider:
+    name: kubetalk
+  version: 0.0.0

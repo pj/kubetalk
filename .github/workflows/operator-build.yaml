@@ -46,11 +46,38 @@ jobs:
           just infra-globals kubetalk ${{ secrets.AWS_REGION }}
           just infra-init
 
+      - name: Get repository URL and version tags
+        id: version
+        run: |
+          REPO_URL=$(cd infra/terraform/main && terraform output -raw api_repository_url)
+          echo "REPO_URL=$REPO_URL" >> $GITHUB_ENV
+          
+          # Get version tags from version_info.json
+          LATEST_TAG=$(jq -r '.version.tags.location_latest' infra/variables/version_info.json)
+          BRANCH_TAG=$(jq -r '.version.tags.branch_latest' infra/variables/version_info.json)
+          COMMIT_TAG=$(jq -r '.version.tags.commit' infra/variables/version_info.json)
+          
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          echo "BRANCH_TAG=$BRANCH_TAG" >> $GITHUB_ENV
+          echo "COMMIT_TAG=$COMMIT_TAG" >> $GITHUB_ENV
+
       - name: Build operator image
-        run: just operator-docker-build
+        run: |
+          docker build -t $REPO_URL:$LATEST_TAG -t $REPO_URL:$BRANCH_TAG -t $REPO_URL:$COMMIT_TAG .
+          docker push $REPO_URL:$LATEST_TAG
+          docker push $REPO_URL:$BRANCH_TAG
+          docker push $REPO_URL:$COMMIT_TAG
 
       - name: Build operator bundle
-        run: just operator-bundle-docker-build
+        run: |
+          docker build -t $REPO_URL-bundle:$LATEST_TAG -t $REPO_URL-bundle:$BRANCH_TAG -t $REPO_URL-bundle:$COMMIT_TAG -f bundle.Dockerfile .
+          docker push $REPO_URL-bundle:$LATEST_TAG
+          docker push $REPO_URL-bundle:$BRANCH_TAG
+          docker push $REPO_URL-bundle:$COMMIT_TAG
 
       - name: Build operator catalog
-        run: just operator-catalog-docker-build
+        run: |
+          docker build -t $REPO_URL-catalog:$LATEST_TAG -t $REPO_URL-catalog:$BRANCH_TAG -t $REPO_URL-catalog:$COMMIT_TAG -f catalog.Dockerfile .
+          docker push $REPO_URL-catalog:$LATEST_TAG
+          docker push $REPO_URL-catalog:$BRANCH_TAG
+          docker push $REPO_URL-catalog:$COMMIT_TAG
