@@ -51,7 +51,11 @@ resource "aws_iam_role_policy" "github_actions_ecr" {
           "ecr:CompleteLayerUpload",
           "ecr:PutImage",
           # List buckets for terraform state
-          "s3:ListAllMyBuckets"
+          "s3:ListAllMyBuckets",
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:HeadObject"
         ]
         Effect   = "Allow"
         Resource = "*"

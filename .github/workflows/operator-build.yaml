@@ -1,0 +1,48 @@
+name: Operator Build
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'operator/**'
+      - '.github/workflows/operator-build.yaml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'operator/**'
+      - '.github/workflows/operator-build.yaml'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - uses: extractions/setup-just@v3
+      - uses: hashicorp/setup-terraform@v3
+      - name: Build operator image
+        run: just operator-docker-build
+
+      - name: Build operator bundle
+        run: just operator-bundle-docker-build
+
+      - name: Build operator catalog
+        run: just operator-catalog-docker-build

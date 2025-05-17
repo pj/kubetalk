@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- kubetalk.click_v1alpha1_kubetalk.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

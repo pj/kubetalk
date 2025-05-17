@@ -1,0 +1,9 @@
+apiVersion: kubetalk.click.kubetalk.click/v1alpha1
+kind: Kubetalk
+metadata:
+  labels:
+    app.kubernetes.io/name: operator
+    app.kubernetes.io/managed-by: kustomize
+  name: kubetalk-sample
+spec:
+  # TODO(user): Add fields here

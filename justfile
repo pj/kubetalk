@@ -28,6 +28,24 @@ backend-lint:
 backend-test:
     pytest
 
+[working-directory: "operator"]
+operator-docker-build:
+    #!/usr/bin/env bash
+    REPO_URL=$(cd ../infra/terraform/main && terraform output -raw api_repository_url)
+    make docker-build docker-push REPO_URL=$REPO_URL
+
+[working-directory: "operator"]
+operator-bundle-docker-build:
+    #!/usr/bin/env bash
+    REPO_URL=$(cd ../infra/terraform/main && terraform output -raw repo_repository_url)
+    make bundle-build bundle-push BUNDLE_REPO=$REPO_URL
+
+[working-directory: "operator"]
+operator-catalog-docker-build:
+    #!/usr/bin/env bash
+    REPO_URL=$(cd ../infra/terraform/main && terraform output -raw catalog_repository_url)
+    make catalog-build catalog-push CATALOG_REPO=$REPO_URL
+
 # Check if Docker is running
 docker-check:
     #!/usr/bin/env bash
