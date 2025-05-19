@@ -1,0 +1,48 @@
+name: Scale EKS Cluster
+
+on:
+  schedule:
+    # 9 PM PST = 5 AM UTC next day
+    - cron: '0 5 * * *'
+  workflow_dispatch:  # Allow manual triggering
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  scale-down:
+    name: Scale Cluster to 0
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-duration-seconds: 900
+
+      - uses: extractions/setup-just@v3
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Scale cluster to 0
+        run: |
+          aws configure set aws_access_key_id ${{ env.AWS_ACCESS_KEY_ID }} --profile kubetalk
+          aws configure set aws_secret_access_key ${{ env.AWS_SECRET_ACCESS_KEY }} --profile kubetalk
+          aws configure set aws_session_token ${{ env.AWS_SESSION_TOKEN }} --profile kubetalk   
+          just infra-globals kubetalk ${{ secrets.AWS_REGION }}
+          just kube-scale-down
+
+      - name: Notify on success
+        if: success()
+        run: |
+          echo "Successfully scaled cluster to 0 nodes at $(date)"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "Failed to scale cluster to 0 nodes at $(date)" 

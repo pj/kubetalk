@@ -117,6 +117,66 @@ aws-login:
     aws sso login --profile kubetalk-root
     @echo "AWS SSO login successful. You can now use AWS CLI with the kubetalk and kubetalk-root profiles."
 
+# Configure kubectl access to EKS cluster
+kube-config:
+    #!/usr/bin/env bash
+    # Get AWS profile and region from config
+    AWS_PROFILE=$(jq -r '.aws_profile' infra/variables/config.json)
+    REGION=$(jq -r '.region' infra/variables/config.json)
+    CLUSTER_NAME=$(cd infra/terraform/main && terraform output -raw cluster_name)
+    
+    # Update kubeconfig
+    aws eks update-kubeconfig \
+        --name $CLUSTER_NAME \
+        --region $REGION \
+        --profile $AWS_PROFILE
+    
+    echo "Kubectl configured for cluster: $CLUSTER_NAME"
+
+# Scale EKS node group to 0 to save costs
+kube-scale-down:
+    #!/usr/bin/env bash
+    # Get AWS profile and region from config
+    AWS_PROFILE=$(jq -r '.aws_profile' infra/variables/config.json)
+    REGION=$(jq -r '.region' infra/variables/config.json)
+    
+    # Update Terraform variables
+    cd infra/terraform/main
+    terraform apply \
+        -var-file=../../variables/global.tfvars \
+        -var-file=../../variables/config.tfvars \
+        -var="node_desired_size=0" \
+        -var="node_max_size=0" \
+        -var="node_min_size=0" \
+        -auto-approve
+    
+    echo "Scaling node group to 0. This may take a few minutes..."
+
+# Scale EKS node group back to 1
+kube-scale-up:
+    #!/usr/bin/env bash
+    # Get AWS profile and region from config
+    AWS_PROFILE=$(jq -r '.aws_profile' infra/variables/config.json)
+    REGION=$(jq -r '.region' infra/variables/config.json)
+    
+    # Update Terraform variables
+    cd infra/terraform/main
+    terraform apply \
+        -var-file=../../variables/global.tfvars \
+        -var-file=../../variables/config.tfvars \
+        -var="node_desired_size=1" \
+        -var="node_max_size=1" \
+        -var="node_min_size=0" \
+        -auto-approve
+    
+    echo "Scaling node group to 1. This may take a few minutes..."
+
+# Show current node count
+kube-node-count:
+    #!/usr/bin/env bash
+    cd infra/terraform/main
+    terraform output node_count
+
 registry-login:
     #!/usr/bin/env bash
     # Get region from config
