@@ -30,9 +30,14 @@ variable "dns" {
   })
 }
 
+variable "domain_name" {
+  type = string
+  description = "The domain name to register"
+}
+
 # Register the domain
 resource "aws_route53domains_registered_domain" "domain" {
-  domain_name = var.dns.domain_name
+  domain_name = var.domain_name
   auto_renew  = false
 
   registrant_contact {
@@ -80,7 +85,7 @@ resource "aws_route53domains_registered_domain" "domain" {
 
 # Create the hosted zone
 resource "aws_route53_zone" "main" {
-  name = var.dns.domain_name
+  name = var.domain_name
 }
 
 # Outputs

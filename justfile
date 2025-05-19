@@ -3,17 +3,48 @@ default:
     @just --list
 
 # Frontend development tasks
+[working-directory: "frontend"]
 frontend-dev:
-    cd frontend && npm run dev
+    npm run dev
 
+[working-directory: "frontend"]
 frontend-build:
-    cd frontend && npm run build
+    npm run build
 
+[working-directory: "frontend"]
 frontend-lint:
-    cd frontend && npm run lint
+    npm run lint
 
+[working-directory: "frontend"]
 frontend-test:
-    cd frontend && npm test
+    npm test
+
+# Deploy frontend to S3/CloudFront
+frontend-deploy: frontend-build
+    #!/usr/bin/env bash
+    # Get AWS profile and region from config
+    AWS_PROFILE=$(jq -r '.aws_profile' infra/variables/config.json)
+    REGION=$(jq -r '.region' infra/variables/config.json)
+    
+    # Get the S3 bucket name from Terraform
+    BUCKET_NAME=$(cd infra/terraform/main && terraform output -raw static_website_bucket_name)
+    
+    # Sync the build directory to S3
+    aws s3 sync frontend/dist/ s3://$BUCKET_NAME/ \
+        --profile $AWS_PROFILE \
+        --region $REGION \
+        --delete
+    
+    # Invalidate CloudFront cache
+    DISTRIBUTION_ID=$(cd infra/terraform/main && terraform output -raw cloudfront_distribution_id)
+    aws cloudfront create-invalidation \
+        --distribution-id $DISTRIBUTION_ID \
+        --paths "/*" \
+        --profile $AWS_PROFILE \
+        --region $REGION
+    
+    echo "Frontend deployed to https://app.kubetalk.click"
+
 
 # Backend development tasks
 [working-directory: "backend"]
@@ -83,7 +114,8 @@ aws-configure:
 
 aws-login:
     aws sso login --profile kubetalk
-    @echo "AWS SSO login successful. You can now use AWS CLI with the kubetalk profile."
+    aws sso login --profile kubetalk-root
+    @echo "AWS SSO login successful. You can now use AWS CLI with the kubetalk and kubetalk-root profiles."
 
 registry-login:
     #!/usr/bin/env bash
@@ -117,7 +149,8 @@ infra-bootstrap:
     # Get config values
     REGION=$(jq -r '.region' infra/variables/config.json)
     AWS_PROFILE=$(jq -r '.aws_profile' infra/variables/config.json)
-    ./infra/scripts/bootstrap.sh $AWS_PROFILE $REGION
+    AWS_ROOT_PROFILE=$(jq -r '.aws_root_profile' infra/variables/config.json)
+    ./infra/scripts/bootstrap.sh $AWS_PROFILE $REGION $AWS_ROOT_PROFILE
 
 # Generate version information
 version:
@@ -133,10 +166,6 @@ infra: infra-init
     terraform apply \
         -var-file=../../variables/global.tfvars \
         -var-file=../../variables/config.tfvars
-
-# Deploy frontend to S3/CloudFront
-deploy: frontend-build
-    cd infra/static && ./deploy.sh
 
 # Initial project setup
 setup:

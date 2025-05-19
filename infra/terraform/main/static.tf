@@ -1,19 +1,21 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
+variable "static_website_bucket_name" {
+  type = string
+  description = "The name of the S3 bucket for static website hosting"
 }
 
-provider "aws" {
-  region = "us-east-1"  # CloudFront requires us-east-1 for SSL certificates
+variable "domain_name" {
+  type = string
+  description = "The domain name of the static website"
+}
+
+variable "subdomain_name" {
+  type = string
+  description = "The subdomain name of the static website"
 }
 
 # S3 bucket for static website hosting
 resource "aws_s3_bucket" "static_website" {
-  bucket = "your-bucket-name"  # Replace with your desired bucket name
+  bucket = var.static_website_bucket_name
 }
 
 # S3 bucket configuration for static website hosting
@@ -27,6 +29,15 @@ resource "aws_s3_bucket_website_configuration" "static_website" {
   error_document {
     key = "index.html"  # For SPA routing
   }
+}
+
+# CloudFront Origin Access Control
+resource "aws_cloudfront_origin_access_control" "static_website" {
+  name                              = "OAC ${aws_s3_bucket.static_website.bucket}"
+  description                       = "Origin Access Control for Static Website"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
 }
 
 # S3 bucket policy to allow CloudFront access
@@ -48,6 +59,20 @@ resource "aws_s3_bucket_policy" "static_website" {
             "AWS:SourceArn" = aws_cloudfront_distribution.static_website.arn
           }
         }
+      },
+      {
+        Sid       = "AllowCloudFrontListBucket"
+        Effect    = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action   = "s3:ListBucket"
+        Resource = aws_s3_bucket.static_website.arn
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = aws_cloudfront_distribution.static_website.arn
+          }
+        }
       }
     ]
   })
@@ -59,10 +84,10 @@ resource "aws_cloudfront_distribution" "static_website" {
   is_ipv6_enabled     = true
   default_root_object = "index.html"
   price_class         = "PriceClass_100"  # Use only North America and Europe edge locations
-  aliases             = ["your-domain.com"]  # Add your domain here
+  aliases             = ["${var.subdomain_name}.${var.domain_name}"]  # Add your domain here
 
   origin {
-    domain_name              = aws_s3_bucket_website_configuration.static_website.website_endpoint
+    domain_name              = aws_s3_bucket.static_website.bucket_regional_domain_name
     origin_id                = "S3-${aws_s3_bucket.static_website.bucket}"
     origin_access_control_id = aws_cloudfront_origin_access_control.static_website.id
   }
@@ -106,18 +131,9 @@ resource "aws_cloudfront_distribution" "static_website" {
   }
 }
 
-# CloudFront Origin Access Control
-resource "aws_cloudfront_origin_access_control" "static_website" {
-  name                              = "OAC ${aws_s3_bucket.static_website.bucket}"
-  description                       = "Origin Access Control for Static Website"
-  origin_access_control_origin_type = "s3"
-  signing_behavior                  = "always"
-  signing_protocol                  = "sigv4"
-}
-
 # SSL Certificate
 resource "aws_acm_certificate" "cert" {
-  domain_name       = "your-domain.com"
+  domain_name       = "${var.subdomain_name}.${var.domain_name}"
   validation_method = "DNS"
 
   lifecycle {
@@ -131,13 +147,27 @@ resource "aws_acm_certificate_validation" "cert" {
   validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
 }
 
+# Route53 provider configuration
+variable "aws_root_profile" {
+  type = string
+  description = "The AWS root profile to use for Route53"
+}
+
+provider "aws" {
+  alias  = "route53"
+  region = var.aws_region
+  profile = var.aws_root_profile
+}
+
 # Route 53 zone
 data "aws_route53_zone" "zone" {
-  name = "your-domain.com."  # Note the trailing dot
+  provider = aws.route53
+  name = "${var.domain_name}."  # Note the trailing dot
 }
 
 # DNS records for certificate validation
 resource "aws_route53_record" "cert_validation" {
+  provider = aws.route53
   for_each = {
     for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
       name   = dvo.resource_record_name
@@ -156,8 +186,9 @@ resource "aws_route53_record" "cert_validation" {
 
 # Main A record for the website
 resource "aws_route53_record" "website" {
+  provider = aws.route53
   zone_id = data.aws_route53_zone.zone.zone_id
-  name    = "your-domain.com"
+  name    = "${var.subdomain_name}.${var.domain_name}"
   type    = "A"
 
   alias {
@@ -174,5 +205,13 @@ output "cloudfront_domain_name" {
 
 # Output the website URL
 output "website_url" {
-  value = "https://your-domain.com"
+  value = "https://${var.subdomain_name}.${var.domain_name}"
 } 
+
+output "static_website_bucket_name" {
+  value = aws_s3_bucket.static_website.bucket
+}
+
+output "cloudfront_distribution_id" {
+  value = aws_cloudfront_distribution.static_website.id
+}

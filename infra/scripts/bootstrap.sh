@@ -4,7 +4,7 @@ set -euxo pipefail
 # Default values
 AWS_PROFILE=${1:-"kubetalk"}
 AWS_REGION=${2:-"us-east-1"}
-
+AWS_ROOT_PROFILE=${3:-"kubetalk-root"}
 # Check if AWS CLI is installed
 if ! command -v aws &> /dev/null; then
     echo "AWS CLI is required but not installed. Please install it first."
@@ -55,6 +55,7 @@ fi
 echo "Organization setup complete!"
 echo "Terraform state bucket: $BUCKET_NAME"
 echo "AWS Profile used: $AWS_PROFILE"
+echo "AWS Root Profile used: $AWS_ROOT_PROFILE"
 
 # Create a terraform.tfvars file for the global module
 mkdir -p infra/variables
@@ -62,6 +63,7 @@ cat > infra/variables/global.tfvars << EOF
 state_bucket = "$BUCKET_NAME"
 aws_region   = "$AWS_REGION"
 aws_profile  = "$AWS_PROFILE"
+aws_root_profile = "$AWS_ROOT_PROFILE"
 EOF
 
 # Create a backend.tf file for the terraform state
@@ -72,4 +74,3 @@ region = "$AWS_REGION"
 profile = "$AWS_PROFILE"
 use_lockfile = true
 EOF
-
