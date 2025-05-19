@@ -45,7 +45,6 @@ frontend-deploy: frontend-build
     
     echo "Frontend deployed to https://app.kubetalk.click"
 
-
 # Backend development tasks
 [working-directory: "backend"]
 backend-dev:

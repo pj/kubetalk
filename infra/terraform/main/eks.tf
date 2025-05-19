@@ -258,8 +258,15 @@ resource "aws_eks_node_group" "main" {
 
   instance_types = ["t3.small"]  # Cost-effective instance type
 
-  remote_access {
-    ec2_ssh_key = null
+  # Add tags for EKS
+  tags = {
+    Name = "${var.cluster_name}-node-group"
+    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+  }
+
+  # Add labels for the node group
+  labels = {
+    "nodegroup-type" = "main"
   }
 
   depends_on = [
@@ -267,6 +274,10 @@ resource "aws_eks_node_group" "main" {
     aws_iam_role_policy_attachment.eks_cni_policy,
     aws_iam_role_policy_attachment.eks_container_registry_readonly
   ]
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Output the cluster endpoint and certificate authority data
