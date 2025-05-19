@@ -36,7 +36,7 @@ jobs:
           aws configure set aws_session_token ${{ env.AWS_SESSION_TOKEN }} --profile kubetalk   
           just infra-globals kubetalk ${{ secrets.AWS_REGION }}
           just infra-init
-          echo "${{ vars.TERRAFORM_CONFIG }}" > infra/variables/config.tfvars
+          echo '${{ vars.TERRAFORM_CONFIG }}' > infra/variables/config.tfvars
           ls -al infra/variables
           cat infra/variables/config.tfvars
           just kube-scale-down
