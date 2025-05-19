@@ -138,11 +138,10 @@ kube-config:
 kube-scale-down:
     #!/usr/bin/env bash
     # Get AWS profile and region from config
-    AWS_PROFILE=$(jq -r '.aws_profile' infra/variables/config.json)
-    REGION=$(jq -r '.region' infra/variables/config.json)
+    AWS_PROFILE=$(jq -r '.aws_profile' ../../variables/config.json)
+    REGION=$(jq -r '.region' ../../variables/config.json)
     
     # Update Terraform variables
-    cd infra/terraform/main
     terraform apply \
         -var-file=../../variables/global.tfvars \
         -var-file=../../variables/config.tfvars \
@@ -158,11 +157,10 @@ kube-scale-down:
 kube-scale-up:
     #!/usr/bin/env bash
     # Get AWS profile and region from config
-    AWS_PROFILE=$(jq -r '.aws_profile' infra/variables/config.json)
-    REGION=$(jq -r '.region' infra/variables/config.json)
+    AWS_PROFILE=$(jq -r '.aws_profile' ../../variables/config.json)
+    REGION=$(jq -r '.region' ../../variables/config.json)
     
     # Update Terraform variables
-    cd infra/terraform/main
     terraform apply \
         -var-file=../../variables/global.tfvars \
         -var-file=../../variables/config.tfvars \
