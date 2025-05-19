@@ -145,7 +145,6 @@ kube-scale-down:
         -var-file=../../variables/global.tfvars \
         -var-file=../../variables/config.tfvars \
         -var="node_desired_size=0" \
-        -var="node_max_size=0" \
         -var="node_min_size=0" \
         -auto-approve
     
@@ -164,7 +163,6 @@ kube-scale-up:
         -var-file=../../variables/global.tfvars \
         -var-file=../../variables/config.tfvars \
         -var="node_desired_size=1" \
-        -var="node_max_size=1" \
         -var="node_min_size=0" \
         -auto-approve
     

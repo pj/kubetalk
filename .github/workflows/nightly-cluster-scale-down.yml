@@ -19,12 +19,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      - name: Configure AWS Credentials (Main Account)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: ${{ secrets.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          role-duration-seconds: 900
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Configure AWS Credentials (Route53 Account)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_ROUTE53 }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          mask-aws-account-id: true
 
       - uses: extractions/setup-just@v3
       - uses: hashicorp/setup-terraform@v3

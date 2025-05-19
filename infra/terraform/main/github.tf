@@ -63,13 +63,13 @@ resource "aws_iam_role_policy" "github_actions" {
           "s3:PutObject",
           "s3:DeleteObject",
           "s3:HeadObject",
-          "s3:ListBucket"
+          "s3:ListBucket",
+          "s3:GetBucketPolicy",
+          "s3:GetBucketLocation",
+          "s3:GetBucketAcl"
         ]
         Effect   = "Allow"
-        Resource = [
-          "arn:aws:s3:::${var.state_bucket}",
-          "arn:aws:s3:::${var.state_bucket}/*"
-        ]
+        Resource = "*"
       },
       {
         # EKS permissions
@@ -82,7 +82,8 @@ resource "aws_iam_role_policy" "github_actions" {
           "iam:DeleteRolePolicy",
           "iam:PassRole",
           "iam:ListRolePolicies",
-          "iam:ListAttachedRolePolicies"
+          "iam:ListAttachedRolePolicies",
+          "iam:GetOpenIDConnectProvider"
         ]
         Effect   = "Allow"
         Resource = "*"
@@ -104,10 +105,26 @@ resource "aws_iam_role_policy" "github_actions" {
         ]
         Effect   = "Allow"
         Resource = "*"
-      }
+      },
+      {
+        # Certificate Manager permissions for ACM
+        Action = [
+          "acm:*"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+      # permissions for ECR
+      {
+        Action = [
+          "ecr:*"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
     ]
   })
-} 
+}
 
 # IAM Role for GitHub Actions Route53 Access
 resource "aws_iam_role" "github_actions_route53" {
@@ -156,4 +173,10 @@ resource "aws_iam_role_policy" "github_actions_route53" {
       }
     ]
   })
+}
+
+# Output the Route53 role ARN
+output "route53_role_arn" {
+  description = "ARN of the Route53 role for GitHub Actions"
+  value       = aws_iam_role.github_actions_route53.arn
 } 
