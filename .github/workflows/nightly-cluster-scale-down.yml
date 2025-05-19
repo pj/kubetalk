@@ -1,4 +1,4 @@
-name: Scale EKS Cluster
+name: Scale Down EKS Cluster
 
 on:
   schedule:
@@ -35,6 +35,7 @@ jobs:
           aws configure set aws_secret_access_key ${{ env.AWS_SECRET_ACCESS_KEY }} --profile kubetalk
           aws configure set aws_session_token ${{ env.AWS_SESSION_TOKEN }} --profile kubetalk   
           just infra-globals kubetalk ${{ secrets.AWS_REGION }}
+          just infra-init
           just kube-scale-down
 
       - name: Notify on success
