@@ -134,6 +134,7 @@ kube-config:
     echo "Kubectl configured for cluster: $CLUSTER_NAME"
 
 # Scale EKS node group to 0 to save costs
+[working-directory: "infra/terraform/main"]
 kube-scale-down:
     #!/usr/bin/env bash
     # Get AWS profile and region from config
@@ -153,6 +154,7 @@ kube-scale-down:
     echo "Scaling node group to 0. This may take a few minutes..."
 
 # Scale EKS node group back to 1
+[working-directory: "infra/terraform/main"]
 kube-scale-up:
     #!/usr/bin/env bash
     # Get AWS profile and region from config
