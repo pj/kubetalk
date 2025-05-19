@@ -34,6 +34,9 @@ jobs:
           aws configure set aws_access_key_id ${{ env.AWS_ACCESS_KEY_ID }} --profile kubetalk
           aws configure set aws_secret_access_key ${{ env.AWS_SECRET_ACCESS_KEY }} --profile kubetalk
           aws configure set aws_session_token ${{ env.AWS_SESSION_TOKEN }} --profile kubetalk   
+          aws configure set aws_access_key_id ${{ env.AWS_ACCESS_KEY_ID }} --profile kubetalk-root
+          aws configure set aws_secret_access_key ${{ env.AWS_SECRET_ACCESS_KEY }} --profile kubetalk-root
+          aws configure set aws_session_token ${{ env.AWS_SESSION_TOKEN }} --profile kubetalk-root   
           just infra-globals kubetalk ${{ secrets.AWS_REGION }}
           just infra-init
           echo '${{ vars.TERRAFORM_CONFIG }}' > infra/variables/config.tfvars

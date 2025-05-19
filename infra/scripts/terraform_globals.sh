@@ -4,7 +4,7 @@ set -euxo pipefail
 # Default values
 AWS_PROFILE=${1:-"kubetalk"}
 AWS_REGION=${2}
-
+AWS_ROOT_PROFILE=${3:-"kubetalk-root"}
 # Check if AWS CLI is installed
 if ! command -v aws &> /dev/null; then
     echo "AWS CLI is required but not installed. Please install it first."
@@ -39,6 +39,7 @@ cat << EOF > infra/variables/global.tfvars
 state_bucket = "$BUCKET_NAME"
 aws_region   = "$AWS_REGION"
 aws_profile  = "$AWS_PROFILE"
+aws_root_profile = "$AWS_ROOT_PROFILE"
 EOF
 
 # Create a backend.tf file for the terraform state
@@ -54,6 +55,7 @@ EOF
 cat << EOF > infra/variables/config.json
 {
 "region": "$AWS_REGION",
-"aws_profile": "$AWS_PROFILE"
+"aws_profile": "$AWS_PROFILE",
+"aws_root_profile": "$AWS_ROOT_PROFILE"
 }
 EOF

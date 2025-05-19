@@ -55,7 +55,11 @@ resource "aws_iam_role_policy" "github_actions_ecr" {
           "s3:GetObject",
           "s3:PutObject",
           "s3:DeleteObject",
-          "s3:HeadObject"
+          "s3:HeadObject",
+          # List and describe all EKS clusters
+          "eks:ListClusters",
+          "eks:DescribeCluster",
+          "eks:ListNodegroups"
         ]
         Effect   = "Allow"
         Resource = "*"
