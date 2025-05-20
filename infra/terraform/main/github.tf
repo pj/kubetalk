@@ -1,5 +1,13 @@
-# GitHub OIDC Provider
+# GitHub OIDC Provider for Main Account
 resource "aws_iam_openid_connect_provider" "github" {
+  url             = "https://token.actions.githubusercontent.com"
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
+}
+
+# GitHub OIDC Provider for Route53 Account
+resource "aws_iam_openid_connect_provider" "github_route53" {
+  provider        = aws.route53
   url             = "https://token.actions.githubusercontent.com"
   client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
@@ -138,7 +146,7 @@ resource "aws_iam_role" "github_actions_route53" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Effect = "Allow"
         Principal = {
-          Federated = aws_iam_openid_connect_provider.github.arn
+          Federated = aws_iam_openid_connect_provider.github_route53.arn
         }
         Condition = {
           StringLike = {

@@ -40,12 +40,15 @@ jobs:
 
       - name: Scale cluster to 0
         run: |
-          aws configure set aws_access_key_id ${{steps.main-credentials.outputs.aws_access_key_id}} --profile kubetalk
-          aws configure set aws_secret_access_key ${{steps.main-credentials.outputs.aws_secret_access_key}} --profile kubetalk
-          aws configure set aws_session_token ${{steps.main-credentials.outputs.aws_session_token}} --profile kubetalk   
-          aws configure set aws_access_key_id ${{steps.route53-credentials.outputs.aws_access_key_id}} --profile kubetalk-root
-          aws configure set aws_secret_access_key ${{steps.route53-credentials.outputs.aws_secret_access_key}} --profile kubetalk-root
-          aws configure set aws_session_token ${{steps.route53-credentials.outputs.aws_session_token}} --profile kubetalk-root   
+          # Configure main account profile
+          aws configure set aws_access_key_id ${{ steps.main-aws.outputs.aws-access-key-id }} --profile kubetalk
+          aws configure set aws_secret_access_key ${{ steps.main-aws.outputs.aws-secret-access-key }} --profile kubetalk
+          aws configure set aws_session_token ${{ steps.main-aws.outputs.aws-session-token }} --profile kubetalk
+          
+          # Configure Route53 account profile
+          aws configure set aws_access_key_id ${{ steps.route53-aws.outputs.aws-access-key-id }} --profile kubetalk-root
+          aws configure set aws_secret_access_key ${{ steps.route53-aws.outputs.aws-secret-access-key }} --profile kubetalk-root
+          aws configure set aws_session_token ${{ steps.route53-aws.outputs.aws-session-token }} --profile kubetalk-root
           just infra-globals kubetalk ${{ secrets.AWS_REGION }}
           just infra-init
           echo '${{ vars.TERRAFORM_CONFIG }}' > infra/variables/config.tfvars
