@@ -66,15 +66,7 @@ resource "aws_iam_role_policy" "github_actions" {
       {
         # S3 permissions for terraform state
         Action = [
-          "s3:ListAllMyBuckets",
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:HeadObject",
-          "s3:ListBucket",
-          "s3:GetBucketPolicy",
-          "s3:GetBucketLocation",
-          "s3:GetBucketAcl"
+          "s3:*"
         ]
         Effect   = "Allow"
         Resource = "*"
@@ -91,7 +83,8 @@ resource "aws_iam_role_policy" "github_actions" {
           "iam:PassRole",
           "iam:ListRolePolicies",
           "iam:ListAttachedRolePolicies",
-          "iam:GetOpenIDConnectProvider"
+          "iam:GetOpenIDConnectProvider",
+          "iam:GetRolePolicy"
         ]
         Effect   = "Allow"
         Resource = "*"
@@ -130,6 +123,14 @@ resource "aws_iam_role_policy" "github_actions" {
         Effect   = "Allow"
         Resource = "*"
       },
+      # CloudFront permissions
+      {
+        Action = [
+          "cloudfront:*"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }
     ]
   })
 }
@@ -174,7 +175,10 @@ resource "aws_iam_role_policy" "github_actions_route53" {
           "route53:GetHostedZone",
           "route53:ListResourceRecordSets",
           "route53:ChangeResourceRecordSets",
-          "route53:GetChange"
+          "route53:GetChange",
+          "route53:ListTagsForResource",
+          "iam:*",
+
         ]
         Effect   = "Allow"
         Resource = "*"
