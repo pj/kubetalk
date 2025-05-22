@@ -20,6 +20,12 @@ if [ -n "$EXISTING_BUCKET" ]; then
     echo "Found existing state bucket: $EXISTING_BUCKET"
     BUCKET_NAME=$EXISTING_BUCKET
 else
+    # In CI, we expect the bucket to exist
+    if [ -n "${CI:-}" ]; then
+        echo "No existing state bucket found in CI environment"
+        exit 1
+    fi
+
     # Generate new bucket name with UUID
     BUCKET_NAME="${BUCKET_PREFIX}$(uuidgen | tr -d '-')"
     echo "Creating new state bucket: $BUCKET_NAME"

@@ -52,9 +52,9 @@ jobs:
           
           just infra-globals kubetalk ${{ secrets.AWS_REGION }}
           just infra-init
-          echo '${{ vars.TERRAFORM_CONFIG }}' > infra/variables/config.tfvars
+          echo '${{ vars.TERRAFORM_CONFIG }}' > infra/variables/config.json
           ls -al infra/variables
-          cat infra/variables/config.tfvars
+          cat infra/variables/config.json
           just kube-scale-down
 
       - name: Notify on success
