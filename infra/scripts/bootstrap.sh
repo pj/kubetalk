@@ -64,6 +64,7 @@ echo "AWS Profile used: $AWS_PROFILE"
 echo "AWS Root Profile used: $AWS_ROOT_PROFILE"
 
 # Create a backend.tf file for the terraform state
+mkdir -p infra/variables
 cat > infra/variables/backend.tfbackend << EOF
 bucket = "$BUCKET_NAME"
 key    = "terraform.tfstate"

@@ -244,12 +244,6 @@ infra: infra-init
     terraform apply \
         -var-file=../../variables/config.json
 
-# Initial project setup
-setup:
-    cd frontend && npm install
-    cd backend && uv pip install -r requirements.txt
-    just infra-init
-
 # Remove build artifacts
 clean:
     rm -rf frontend/dist
