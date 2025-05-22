@@ -168,6 +168,29 @@ kube-scale-up:
     
     echo "Scaling node group to 1. This may take a few minutes..."
 
+# Scale EKS node group to 0 to save costs
+[working-directory: "infra/terraform/main"]
+kube-eks-destroy:
+    #!/usr/bin/env bash
+    # Get AWS profile and region from config
+    AWS_PROFILE=$(jq -r '.aws_profile' ../../variables/config.json)
+    REGION=$(jq -r '.region' ../../variables/config.json)
+    
+    terraform destroy \
+        -var-file=../../variables/global.tfvars \
+        -var-file=../../variables/config.tfvars \
+        -target=aws_eks_cluster.main \
+        -target=aws_eks_node_group.main \
+        -target=aws_iam_role.eks_cluster \
+        -target=aws_iam_role.eks_node_group \
+        -target=aws_iam_role_policy_attachment.eks_cluster_policy \
+        -target=aws_iam_role_policy_attachment.eks_worker_node_policy \
+        -target=aws_iam_role_policy_attachment.eks_cni_policy \
+        -target=aws_iam_role_policy_attachment.eks_container_registry_readonly \
+        -target=aws_security_group.eks_nodes
+
+    echo "EKS cluster destroyed. This may take a few minutes..."
+
 # Show current node count
 kube-node-count:
     #!/usr/bin/env bash
