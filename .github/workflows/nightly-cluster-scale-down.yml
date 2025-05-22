@@ -50,6 +50,7 @@ jobs:
           aws configure set aws_secret_access_key "${{ steps.route53-aws.outputs.aws-secret-access-key }}" --profile kubetalk-root
           aws configure set aws_session_token "${{ steps.route53-aws.outputs.aws-session-token }}" --profile kubetalk-root
           
+          mkdir -p infra/variables
           echo '${{ vars.TERRAFORM_CONFIG }}' > infra/variables/config.json
           just infra-globals kubetalk ${{ secrets.AWS_REGION }} kubetalk-root
           just infra-init
