@@ -44,9 +44,8 @@ IS_DIRTY_JSON=$([ -n "$IS_DIRTY" ] && echo "true" || echo "false")
 
 COMMIT_SUFFIX=$([ -n "$IS_DIRTY" ] && echo "$DIRTY_COMMIT.dirty" || echo "$COMMIT")
 
-# Create JSON file with version info
-mkdir -p infra/variables
-cat > infra/variables/version_info.json << EOF
+# Create version info JSON
+VERSION_INFO=$(cat << EOF
 {
   "version": {
     "branch": "${BRANCH}",
@@ -62,6 +61,18 @@ cat > infra/variables/version_info.json << EOF
   }
 }
 EOF
+)
+
+# Update config.json with version info
+if [ -f "infra/variables/config.json" ]; then
+    # Use jq to merge the version info into the existing config
+    jq -s '.[0] * .[1]' infra/variables/config.json <(echo "$VERSION_INFO") > infra/variables/config.json.tmp
+    mv infra/variables/config.json.tmp infra/variables/config.json
+else
+    # If config.json doesn't exist, create it with just the version info
+    mkdir -p infra/variables
+    echo "$VERSION_INFO" > infra/variables/config.json
+fi
 
 
 

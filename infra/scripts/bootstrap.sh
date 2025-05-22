@@ -57,15 +57,6 @@ echo "Terraform state bucket: $BUCKET_NAME"
 echo "AWS Profile used: $AWS_PROFILE"
 echo "AWS Root Profile used: $AWS_ROOT_PROFILE"
 
-# Create a terraform.tfvars file for the global module
-mkdir -p infra/variables
-cat > infra/variables/global.tfvars << EOF
-state_bucket = "$BUCKET_NAME"
-aws_region   = "$AWS_REGION"
-aws_profile  = "$AWS_PROFILE"
-aws_root_profile = "$AWS_ROOT_PROFILE"
-EOF
-
 # Create a backend.tf file for the terraform state
 cat > infra/variables/backend.tfbackend << EOF
 bucket = "$BUCKET_NAME"
@@ -74,3 +65,26 @@ region = "$AWS_REGION"
 profile = "$AWS_PROFILE"
 use_lockfile = true
 EOF
+
+# Create or update config.json
+mkdir -p infra/variables
+if [ -f "infra/variables/config.json" ]; then
+    # Update only the specific keys we manage
+    jq --arg aws_region "$AWS_REGION" \
+       --arg aws_profile "$AWS_PROFILE" \
+       --arg aws_root_profile "$AWS_ROOT_PROFILE" \
+       --arg state_bucket "$BUCKET_NAME" \
+       '.aws_region = $aws_region | .aws_profile = $aws_profile | .aws_root_profile = $aws_root_profile | .state_bucket = $state_bucket' \
+       infra/variables/config.json > infra/variables/config.json.tmp
+    mv infra/variables/config.json.tmp infra/variables/config.json
+else
+    # If config.json doesn't exist, create it with our managed keys
+    cat << EOF > infra/variables/config.json
+{
+    "aws_region": "$AWS_REGION",
+    "aws_profile": "$AWS_PROFILE",
+    "aws_root_profile": "$AWS_ROOT_PROFILE",
+    "state_bucket": "$BUCKET_NAME"
+}
+EOF
+fi

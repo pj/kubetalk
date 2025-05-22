@@ -94,10 +94,10 @@ backend-docker: docker-check version infra-init registry-login
     #!/usr/bin/env bash
     # Get repository URL from terraform output
     REPO_URL=$(cd ../infra/terraform/main && terraform output -raw api_repository_url)
-    # Get version tags from version_info.json
-    LATEST_TAG=$(jq -r '.version.tags.location_latest' ../infra/variables/version_info.json)
-    BRANCH_TAG=$(jq -r '.version.tags.branch_latest' ../infra/variables/version_info.json)
-    COMMIT_TAG=$(jq -r '.version.tags.commit' ../infra/variables/version_info.json)
+    # Get version tags from config.json
+    LATEST_TAG=$(jq -r '.version.tags.location_latest' ../infra/variables/config.json)
+    BRANCH_TAG=$(jq -r '.version.tags.branch_latest' ../infra/variables/config.json)
+    COMMIT_TAG=$(jq -r '.version.tags.commit' ../infra/variables/config.json)
     # Build and tag the image
     docker build -t $REPO_URL:$LATEST_TAG -t $REPO_URL:$BRANCH_TAG -t $REPO_URL:$COMMIT_TAG .
     # Push all tags
@@ -142,8 +142,7 @@ kube-scale-down:
     
     # Update Terraform variables
     terraform apply \
-        -var-file=../../variables/global.tfvars \
-        -var-file=../../variables/config.tfvars \
+        -var-file=../../variables/config.json \
         -var="node_desired_size=0" \
         -var="node_min_size=0" \
         -auto-approve
@@ -160,8 +159,7 @@ kube-scale-up:
     
     # Update Terraform variables
     terraform apply \
-        -var-file=../../variables/global.tfvars \
-        -var-file=../../variables/config.tfvars \
+        -var-file=../../variables/config.json \
         -var="node_desired_size=1" \
         -var="node_min_size=0" \
         -auto-approve
@@ -177,8 +175,7 @@ kube-eks-destroy:
     REGION=$(jq -r '.region' ../../variables/config.json)
     
     terraform destroy \
-        -var-file=../../variables/global.tfvars \
-        -var-file=../../variables/config.tfvars \
+        -var-file=../../variables/config.json \
         -target=aws_eks_cluster.main \
         -target=aws_eks_node_group.main \
         -target=aws_iam_role.eks_cluster \
@@ -234,7 +231,8 @@ infra-bootstrap:
 
 # Generate version information
 version:
-    ./infra/scripts/generate_version_info.sh $(test -f infra/variables/location.json && jq -r '.location' infra/variables/location.json || echo "")
+    ./infra/scripts/generate_version_info.sh \
+        $(test -f infra/variables/config.json && jq -r '.location' infra/variables/config.json || echo "")
 
 # Initialize terraform
 [working-directory: "infra/terraform/main"]
@@ -244,8 +242,7 @@ infra-init:
 [working-directory: "infra/terraform/main"]
 infra: infra-init
     terraform apply \
-        -var-file=../../variables/global.tfvars \
-        -var-file=../../variables/config.tfvars
+        -var-file=../../variables/config.json
 
 # Initial project setup
 setup:
