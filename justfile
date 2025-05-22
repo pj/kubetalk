@@ -9,6 +9,9 @@ frontend-dev:
 
 [working-directory: "frontend"]
 frontend-build:
+    #!/usr/bin/env bash
+    # Generate environment variables
+    ../infra/scripts/generate_frontend_env.sh
     npm run build
 
 [working-directory: "frontend"]

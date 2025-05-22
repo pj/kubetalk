@@ -52,25 +52,6 @@ provider "aws" {
   profile = var.aws_profile
 }
 
-module "registry" {
-  source = "../registry"
-}
-
-output "api_repository_url" {
-  value = module.registry.api_repository.url
-}
-
-output "operator_repository_url" {
-  value = module.registry.operator_repository.url
-}
-
-output "bundle_repository_url" {
-  value = module.registry.bundle_repository.url
-}
-output "catalog_repository_url" {
-  value = module.registry.catalog_repository.url
-}
-
 output "github_actions_role_arn" {
   value = aws_iam_role.github_actions.arn
 }

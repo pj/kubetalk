@@ -1,11 +1,3 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
 
 # ECR Repository for the operator
 resource "aws_ecr_repository" "operator" {
@@ -44,30 +36,18 @@ resource "aws_ecr_repository" "api" {
   }
 }
 
-output "operator_repository" {
-  value = {
-    url = aws_ecr_repository.operator.repository_url
-    arn = aws_ecr_repository.operator.arn
-  }
+output "api_repository_url" {
+  value = aws_ecr_repository.api.repository_url
 }
 
-output "api_repository" {
-  value = {
-    url = aws_ecr_repository.api.repository_url
-    arn = aws_ecr_repository.api.arn
-  }
+output "operator_repository_url" {
+  value = aws_ecr_repository.operator.repository_url
 }
 
-output "bundle_repository" {
-  value = {
-    url = aws_ecr_repository.bundle.repository_url
-    arn = aws_ecr_repository.bundle.arn
-  }
+output "bundle_repository_url" {
+  value = aws_ecr_repository.bundle.repository_url
 }
 
-output "catalog_repository" {
-  value = {
-    url = aws_ecr_repository.catalog.repository_url
-    arn = aws_ecr_repository.catalog.arn
-  }
+output "catalog_repository_url" {
+  value = aws_ecr_repository.catalog.repository_url
 }
