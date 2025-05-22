@@ -208,8 +208,8 @@ registry-login:
         aws ecr get-login-password --region $REGION --profile $AWS_PROFILE | docker login --username AWS --password-stdin $REPO_URL
     fi
 
-infra-globals profile region:
-    ./infra/scripts/terraform_globals.sh {{profile}} {{region}}
+infra-globals profile region root_profile:
+    ./infra/scripts/bootstrap.sh {{profile}} {{region}} {{root_profile}}
 
 infra-manual-steps:
     echo "Manual steps before running just infra-bootstrap:"
@@ -256,9 +256,9 @@ clean:
     find . -type d -name __pycache__ -exec rm -r {} +
     find . -type f -name '*.pyc' -delete
 
-ci-backend-docker profile region:
+ci-backend-docker profile region root_profile:
     #!/usr/bin/env bash
-    just infra-globals {{profile}} {{region}}
+    just infra-globals {{profile}} {{region}} {{root_profile}}
     ls -la infra/variables
     just backend-docker
 
