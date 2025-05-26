@@ -123,8 +123,8 @@ backend-docker: docker-check version infra-init registry-login
     LATEST_TAG=$(jq -r '.version.tags.location_latest' ../infra/variables/config.json)
     BRANCH_TAG=$(jq -r '.version.tags.branch_latest' ../infra/variables/config.json)
     COMMIT_TAG=$(jq -r '.version.tags.commit' ../infra/variables/config.json)
-    # Build and tag the image
-    docker build -t $REPO_URL:$LATEST_TAG -t $REPO_URL:$BRANCH_TAG -t $REPO_URL:$COMMIT_TAG .
+    # Build and tag the image with platform specification
+    docker build --platform linux/amd64 -t $REPO_URL:$LATEST_TAG -t $REPO_URL:$BRANCH_TAG -t $REPO_URL:$COMMIT_TAG .
     # Push all tags
     docker push $REPO_URL:$LATEST_TAG
     docker push $REPO_URL:$BRANCH_TAG

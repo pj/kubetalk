@@ -70,7 +70,6 @@ bucket = "$BUCKET_NAME"
 key    = "terraform.tfstate"
 region = "$AWS_REGION"
 profile = "$AWS_PROFILE"
-use_lockfile = true
 EOF
 
 # Create or update config.json

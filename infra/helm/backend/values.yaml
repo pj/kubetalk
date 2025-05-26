@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: # Will be set by CI/CD
   tag: # Will be set by CI/CD
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 serviceAccount:
   create: true

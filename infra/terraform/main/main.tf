@@ -10,7 +10,6 @@ terraform {
     key    = ""
     region = ""
     profile = ""
-    use_lockfile = true
   }
 }
 
