@@ -1,0 +1,43 @@
+replicaCount: 1
+
+image:
+  repository: # Will be set by CI/CD
+  tag: # Will be set by CI/CD
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  name: "backend"
+  annotations: {}  # Will be set by CI/CD with eks.amazonaws.com/role-arn
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: api.kubetalk.click
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+env:
+  - name: ENVIRONMENT
+    value: "production"
+  - name: LOG_LEVEL
+    value: "INFO"
+  - name: PORT
+    value: "8000" 

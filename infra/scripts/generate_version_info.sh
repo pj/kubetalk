@@ -63,16 +63,23 @@ VERSION_INFO=$(cat << EOF
 EOF
 )
 
+# Ensure the variables directory exists
+mkdir -p infra/variables
+
 # Update config.json with version info
 if [ -f "infra/variables/config.json" ]; then
     # Use jq to merge the version info into the existing config
-    jq -s '.[0] * .[1]' infra/variables/config.json <(echo "$VERSION_INFO") > infra/variables/config.json.tmp
+    # First, read the existing config
+    EXISTING_CONFIG=$(cat infra/variables/config.json)
+    # Then merge the version info into it
+    echo "$EXISTING_CONFIG" | jq --argjson version "$(echo "$VERSION_INFO" | jq '.version')" '.version = $version' > infra/variables/config.json.tmp
     mv infra/variables/config.json.tmp infra/variables/config.json
 else
     # If config.json doesn't exist, create it with just the version info
-    mkdir -p infra/variables
     echo "$VERSION_INFO" > infra/variables/config.json
 fi
+
+echo "Version info updated in infra/variables/config.json"
 
 
 

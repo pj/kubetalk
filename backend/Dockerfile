@@ -2,6 +2,7 @@ FROM python:3.12-slim
 
 # Default port argument
 ARG PORT=8000
+ENV PORT=$PORT
 
 WORKDIR /app
 
@@ -19,8 +20,7 @@ RUN uv pip install .
 # Copy the rest of the application
 COPY src/ src/
 
-# Expose the port the app runs on
-EXPOSE ${PORT}
+WORKDIR /app/src
 
 # Command to run the application
-CMD ["sh", "-c", "uv run uvicorn src.main:app --host 0.0.0.0 --port ${PORT}"] 
+CMD ["sh", "-c", "uv run uvicorn main:app --host 0.0.0.0 --port ${PORT}"] 

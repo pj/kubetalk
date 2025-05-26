@@ -10,6 +10,7 @@ frontend-dev:
 [working-directory: "frontend"]
 frontend-build:
     #!/usr/bin/env bash
+    set -euo pipefail
     # Generate environment variables
     ../infra/scripts/generate_frontend_env.sh
     npm run build
@@ -25,6 +26,7 @@ frontend-test:
 # Deploy frontend to S3/CloudFront
 frontend-deploy: frontend-build
     #!/usr/bin/env bash
+    set -euo pipefail
     # Get AWS profile and region from config
     AWS_PROFILE=$(jq -r '.aws_profile' infra/variables/config.json)
     REGION=$(jq -r '.region' infra/variables/config.json)
@@ -54,6 +56,21 @@ backend-dev:
     uv run uvicorn src.main:app --reload --port 8000
 
 [working-directory: "backend"]
+backend-docker-run:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Get repository URL and tag
+    REPO_URL=$(cd ../infra/terraform/main && terraform output -raw api_repository_url)
+    LATEST_TAG=$(jq -r '.version.tags.location_latest' ../infra/variables/config.json)
+    
+    # Run the container
+    docker run -p 8000:8000 \
+      -e PORT=8000 \
+      -e ENVIRONMENT=development \
+      -e LOG_LEVEL=DEBUG \
+      $REPO_URL:$LATEST_TAG
+
+[working-directory: "backend"]
 backend-lint:
     ruff check .
 
@@ -64,12 +81,14 @@ backend-test:
 [working-directory: "operator"]
 operator-docker-build:
     #!/usr/bin/env bash
+    set -euo pipefail
     REPO_URL=$(cd ../infra/terraform/main && terraform output -raw operator_repository_url)
     make docker-build docker-push REPO_URL=$REPO_URL
 
 [working-directory: "operator"]
 operator-bundle-docker-build:
     #!/usr/bin/env bash
+    set -euo pipefail
     REPO_URL=$(cd ../infra/terraform/main && terraform output -raw bundle_repository_url)
     API_REPO_URL=$(cd ../infra/terraform/main && terraform output -raw api_repository_url)
     make bundle-build bundle-push BUNDLE_REPO=$REPO_URL REPO_URL=$API_REPO_URL
@@ -77,6 +96,7 @@ operator-bundle-docker-build:
 [working-directory: "operator"]
 operator-catalog-docker-build:
     #!/usr/bin/env bash
+    set -euo pipefail
     REPO_URL=$(cd ../infra/terraform/main && terraform output -raw catalog_repository_url)
     API_REPO_URL=$(cd ../infra/terraform/main && terraform output -raw api_repository_url)
     BUNDLE_REPO_URL=$(cd ../infra/terraform/main && terraform output -raw bundle_repository_url)
@@ -85,6 +105,7 @@ operator-catalog-docker-build:
 # Check if Docker is running
 docker-check:
     #!/usr/bin/env bash
+    set -euo pipefail
     if ! docker info > /dev/null 2>&1; then
         echo "Error: Docker is not running" >&2
         exit 1
@@ -95,6 +116,7 @@ docker-check:
 [working-directory: "backend"]
 backend-docker: docker-check version infra-init registry-login 
     #!/usr/bin/env bash
+    set -euo pipefail
     # Get repository URL from terraform output
     REPO_URL=$(cd ../infra/terraform/main && terraform output -raw api_repository_url)
     # Get version tags from config.json
@@ -122,6 +144,7 @@ aws-login:
 # Configure kubectl access to EKS cluster
 kube-config:
     #!/usr/bin/env bash
+    set -euo pipefail
     # Get AWS profile and region from config
     AWS_PROFILE=$(jq -r '.aws_profile' infra/variables/config.json)
     REGION=$(jq -r '.region' infra/variables/config.json)
@@ -139,6 +162,7 @@ kube-config:
 [working-directory: "infra/terraform/main"]
 kube-scale-down:
     #!/usr/bin/env bash
+    set -euo pipefail
     # Get AWS profile and region from config
     AWS_PROFILE=$(jq -r '.aws_profile' ../../variables/config.json)
     REGION=$(jq -r '.region' ../../variables/config.json)
@@ -156,6 +180,7 @@ kube-scale-down:
 [working-directory: "infra/terraform/main"]
 kube-scale-up:
     #!/usr/bin/env bash
+    set -euo pipefail
     # Get AWS profile and region from config
     AWS_PROFILE=$(jq -r '.aws_profile' ../../variables/config.json)
     REGION=$(jq -r '.region' ../../variables/config.json)
@@ -173,6 +198,7 @@ kube-scale-up:
 [working-directory: "infra/terraform/main"]
 kube-eks-destroy:
     #!/usr/bin/env bash
+    set -euo pipefail
     # Get AWS profile and region from config
     AWS_PROFILE=$(jq -r '.aws_profile' ../../variables/config.json)
     REGION=$(jq -r '.region' ../../variables/config.json)
@@ -194,11 +220,13 @@ kube-eks-destroy:
 # Show current node count
 kube-node-count:
     #!/usr/bin/env bash
+    set -euo pipefail
     cd infra/terraform/main
     terraform output node_count
 
 registry-login:
     #!/usr/bin/env bash
+    set -euo pipefail
     # Get region from config
     REGION=$(jq -r '.region' infra/variables/config.json)
     AWS_PROFILE=$(jq -r '.aws_profile' infra/variables/config.json)
@@ -226,6 +254,7 @@ infra-manual-steps:
 # Create some basic things for running terraform in the infra
 infra-bootstrap:
     #!/usr/bin/env bash
+    set -euo pipefail
     # Get config values
     REGION=$(jq -r '.region' infra/variables/config.json)
     AWS_PROFILE=$(jq -r '.aws_profile' infra/variables/config.json)
@@ -255,9 +284,40 @@ clean:
 
 ci-backend-docker profile region root_profile:
     #!/usr/bin/env bash
+    set -euo pipefail
     just infra-globals {{profile}} {{region}} {{root_profile}}
     ls -la infra/variables
     just backend-docker
+
+# Install Helm dependencies and charts
+infra-helm: kube-config
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Add required Helm repos
+    helm repo add jetstack https://charts.jetstack.io
+    helm repo update
+
+    # Install cert-manager
+    helm upgrade --install cert-manager jetstack/cert-manager \
+        --namespace cert-manager \
+        --create-namespace \
+        --version v1.17.2 \
+        --set installCRDs=true
+
+    # Get the repository URL and role ARN from terraform output
+    REPO_URL=$(cd infra/terraform/main && terraform output -raw api_repository_url)
+    LATEST_TAG=$(jq -r '.version.tags.location_latest' infra/variables/config.json)
+    ROLE_ARN=$(cd infra/terraform/main && terraform output -raw service_account_role_arn)
+
+    # Install backend chart
+    helm upgrade --install backend ./infra/helm/backend \
+        --namespace backend \
+        --create-namespace \
+        --set image.repository=$REPO_URL \
+        --set image.tag=$LATEST_TAG \
+        --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=$ROLE_ARN
+
+    echo "Helm charts installed successfully!"
 
 # Show this help message
 help:
