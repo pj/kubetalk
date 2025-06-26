@@ -276,6 +276,11 @@ infra: infra-init
     terraform apply \
         -var-file=../../variables/config.json
 
+[working-directory: "infra/terraform/main"]
+infra-destroy:
+    terraform destroy \
+        -var-file=../../variables/config.json
+
 # Remove build artifacts
 clean:
     rm -rf frontend/dist
@@ -295,6 +300,7 @@ infra-helm: kube-config
     set -euo pipefail
     # Add required Helm repos
     helm repo add jetstack https://charts.jetstack.io
+    helm repo add eks https://aws.github.io/eks-charts
     helm repo update
 
     # Install cert-manager
@@ -308,6 +314,18 @@ infra-helm: kube-config
     REPO_URL=$(cd infra/terraform/main && terraform output -raw api_repository_url)
     LATEST_TAG=$(jq -r '.version.tags.location_latest' infra/variables/config.json)
     ROLE_ARN=$(cd infra/terraform/main && terraform output -raw service_account_role_arn)
+    CLUSTER_NAME=$(cd infra/terraform/main && terraform output -raw cluster_name)
+    ALB_ROLE_ARN=$(cd infra/terraform/main && terraform output -raw aws_load_balancer_controller_role_arn)
+    EIP_ID=$(cd infra/terraform/main && terraform output -raw alb_eip_id)
+    CERT_ARN=$(cd infra/terraform/main && terraform output -raw certificate_arn)
+
+    # Install AWS Load Balancer Controller
+    helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller \
+        --namespace kube-system \
+        --set clusterName=$CLUSTER_NAME \
+        --set serviceAccount.create=true \
+        --set serviceAccount.name=aws-load-balancer-controller \
+        --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=$ALB_ROLE_ARN
 
     # Install backend chart
     helm upgrade --install backend ./infra/helm/backend \
@@ -315,9 +333,51 @@ infra-helm: kube-config
         --create-namespace \
         --set image.repository=$REPO_URL \
         --set image.tag=$LATEST_TAG \
-        --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=$ROLE_ARN
+        --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=$ROLE_ARN \
+        --set ingress.annotations."alb\.ingress\.kubernetes\.io/certificate-arn"=$CERT_ARN \
+        -f infra/variables/values.yaml
 
-    echo "Helm charts installed successfully!"
+    echo "Waiting for ALB to be created..."
+    # Wait for the ALB to be created and get its DNS name
+    ALB_DNS=""
+    for i in {1..30}; do
+        ALB_DNS=$(kubectl get ingress -n backend backend -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        if [ ! -z "$ALB_DNS" ]; then
+            break
+        fi
+        echo "Waiting for ALB DNS name... (attempt $i/30)"
+        sleep 10
+    done
+
+    if [ -z "$ALB_DNS" ]; then
+        echo "Failed to get ALB DNS name after 5 minutes"
+        exit 1
+    fi
+
+    echo "ALB DNS name: $ALB_DNS"
+    
+    # Get the ALB hosted zone ID
+    ALB_HOSTED_ZONE_ID=$(aws elbv2 describe-load-balancers --names $(echo $ALB_DNS | cut -d'-' -f1) --query 'LoadBalancers[0].CanonicalHostedZoneId' --output text)
+    
+    # Create Route53 alias record
+    aws route53 change-resource-record-sets \
+        --hosted-zone-id $(aws route53 list-hosted-zones --query 'HostedZones[0].Id' --output text | sed 's/\/hostedzone\///') \
+        --change-batch '{
+            "Changes": [{
+                "Action": "UPSERT",
+                "ResourceRecordSet": {
+                    "Name": "api.kubetalk.click",
+                    "Type": "A",
+                    "AliasTarget": {
+                        "HostedZoneId": "'$ALB_HOSTED_ZONE_ID'",
+                        "DNSName": "'$ALB_DNS'",
+                        "EvaluateTargetHealth": true
+                    }
+                }
+            }]
+        }'
+
+    echo "Helm charts installed and Route53 record created successfully!"
 
 # Show this help message
 help:

@@ -43,7 +43,8 @@ resource "aws_acm_certificate" "cert" {
   subject_alternative_names = [
     "*.${var.dns.domain_name}",
     "app.${var.dns.domain_name}",
-    "auth.${var.dns.domain_name}"
+    "auth.${var.dns.domain_name}",
+    "api.${var.dns.domain_name}"
   ]
 
   lifecycle {
