@@ -212,8 +212,28 @@ kube-eks-destroy:
         -target=aws_iam_role_policy_attachment.eks_cluster_policy \
         -target=aws_iam_role_policy_attachment.eks_worker_node_policy \
         -target=aws_iam_role_policy_attachment.eks_cni_policy \
-        -target=aws_iam_role_policy_attachment.eks_container_registry_readonly \
-        -target=aws_security_group.eks_nodes
+        -target=aws_iam_role_policy_attachment.ek_container_registry_readonly \
+        -target=aws_security_group.eks_nodes \
+        -target=aws_cloudfront_distribution.static_website \
+        -target=aws_cloudfront_origin_access_control.static_website \
+        -target=aws_cognito_user_pool.main \
+        -target=aws_cognito_user_pool_client.main \
+        -target=aws_cognito_user_pool_domain.main \
+        -target=aws_eip.nat \
+        -target=aws_iam_policy.ecr_access \
+        -target=aws_internet_gateway.main \
+        -target=aws_nat_gateway.main \
+        -target=aws_route_table.private \
+        -target=aws_route_table.public \
+        -target=aws_route_table_association.private[0] \
+        -target=aws_route_table_association.private[1] \
+        -target=aws_route_table_association.public[0] \
+        -target=aws_route_table_association.public[1] \
+        -target=aws_subnet.private[0] \
+        -target=aws_subnet.private[1] \
+        -target=aws_subnet.public[0] \
+        -target=aws_subnet.public[1] \
+        -target=aws_vpc.main
 
     echo "EKS cluster destroyed. This may take a few minutes..."
 
@@ -316,7 +336,6 @@ infra-helm: kube-config
     ROLE_ARN=$(cd infra/terraform/main && terraform output -raw service_account_role_arn)
     CLUSTER_NAME=$(cd infra/terraform/main && terraform output -raw cluster_name)
     ALB_ROLE_ARN=$(cd infra/terraform/main && terraform output -raw aws_load_balancer_controller_role_arn)
-    EIP_ID=$(cd infra/terraform/main && terraform output -raw alb_eip_id)
     CERT_ARN=$(cd infra/terraform/main && terraform output -raw certificate_arn)
 
     # Install AWS Load Balancer Controller
@@ -337,47 +356,8 @@ infra-helm: kube-config
         --set ingress.annotations."alb\.ingress\.kubernetes\.io/certificate-arn"=$CERT_ARN \
         -f infra/variables/values.yaml
 
-    echo "Waiting for ALB to be created..."
-    # Wait for the ALB to be created and get its DNS name
-    ALB_DNS=""
-    for i in {1..30}; do
-        ALB_DNS=$(kubectl get ingress -n backend backend -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-        if [ ! -z "$ALB_DNS" ]; then
-            break
-        fi
-        echo "Waiting for ALB DNS name... (attempt $i/30)"
-        sleep 10
-    done
-
-    if [ -z "$ALB_DNS" ]; then
-        echo "Failed to get ALB DNS name after 5 minutes"
-        exit 1
-    fi
-
-    echo "ALB DNS name: $ALB_DNS"
-    
-    # Get the ALB hosted zone ID
-    ALB_HOSTED_ZONE_ID=$(aws elbv2 describe-load-balancers --names $(echo $ALB_DNS | cut -d'-' -f1) --query 'LoadBalancers[0].CanonicalHostedZoneId' --output text)
-    
-    # Create Route53 alias record
-    aws route53 change-resource-record-sets \
-        --hosted-zone-id $(aws route53 list-hosted-zones --query 'HostedZones[0].Id' --output text | sed 's/\/hostedzone\///') \
-        --change-batch '{
-            "Changes": [{
-                "Action": "UPSERT",
-                "ResourceRecordSet": {
-                    "Name": "api.kubetalk.click",
-                    "Type": "A",
-                    "AliasTarget": {
-                        "HostedZoneId": "'$ALB_HOSTED_ZONE_ID'",
-                        "DNSName": "'$ALB_DNS'",
-                        "EvaluateTargetHealth": true
-                    }
-                }
-            }]
-        }'
-
-    echo "Helm charts installed and Route53 record created successfully!"
+infra-alb:
+    ./infra/scripts/create_alb_alias.sh
 
 # Show this help message
 help:
